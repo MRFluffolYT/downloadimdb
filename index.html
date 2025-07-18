@@ -2,48 +2,116 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Estrattore Immagine IMDb</title>
+    <title>Scarica Immagine IMDb</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 30px; }
-        input { width: 60%; padding: 10px; margin: 10px 0; }
-        button { padding: 10px 20px; font-size: 16px; }
-        img { margin-top: 20px; max-width: 90%; height: auto; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f9f9f9;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        input {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            font-size: 18px;
+            background-color: #ff9b00;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #e68a00;
+        }
+        img {
+            margin-top: 20px;
+            width: 100%;
+            border-radius: 8px;
+        }
+        a {
+            display: inline-block;
+            margin-top: 12px;
+            font-size: 16px;
+            color: #0066cc;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #aaa;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <h1>Estrattore Immagine IMDb</h1>
-    <input type="text" id="urlInput" placeholder="Incolla qui il link IMDb Mediaviewer">
-    <br>
-    <button onclick="estraiImmagine()">Estrai Immagine</button>
-    <div id="output"></div>
+    <div class="container">
+        <h1>Scarica Immagine IMDb</h1>
+        <input type="text" id="urlInput" placeholder="Incolla il link IMDb Mediaviewer">
+        <button onclick="estraiImmagine()">Scarica Immagine</button>
+        <div id="output"></div>
+        <div class="footer">Progetto semplice per uso personale • GitHub Pages friendly</div>
+    </div>
 
     <script>
-        async function estraiImmagine() {
-            const url = document.getElementById('urlInput').value;
-            if (!url.includes('imdb.com/mediaviewer')) {
-                document.getElementById('output').innerHTML = "<p>Inserisci un link IMDb valido.</p>";
-                return;
-            }
+    async function estraiImmagine() {
+        const url = document.getElementById('urlInput').value.trim();
+        const output = document.getElementById('output');
+        output.innerHTML = '';
 
-            try {
-                const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
-                const response = await fetch(proxyUrl);
-                const text = await response.text();
-
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(text, 'text/html');
-                const img = doc.querySelector('img.ipc-media img, img');
-
-                if (img) {
-                    const imgSrc = img.src;
-                    document.getElementById('output').innerHTML = `<img src="${imgSrc}" alt="Immagine IMDb">`;
-                } else {
-                    document.getElementById('output').innerHTML = "<p>Immagine non trovata.</p>";
-                }
-            } catch (error) {
-                document.getElementById('output').innerHTML = "<p>Errore durante il download.</p>";
-            }
+        if (!url.includes('imdb.com/')) {
+            output.innerHTML = "<p>Per favore inserisci un link IMDb valido.</p>";
+            return;
         }
+
+        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
+
+        try {
+            const response = await fetch(proxyUrl);
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const meta = doc.querySelector('meta[property=\"og:image\"]');
+
+            if (meta && meta.content) {
+                const imgSrc = meta.content;
+                output.innerHTML = `
+                    <img src="${imgSrc}" alt="Immagine IMDb">
+                    <a href="${imgSrc}" target="_blank">Apri immagine a schermo intero</a>
+                `;
+            } else {
+                output.innerHTML = "<p>Immagine non trovata.</p>";
+            }
+        } catch (error) {
+            output.innerHTML = "<p>Errore nel recupero dell'immagine.</p>";
+            console.error(error);
+        }
+    }
     </script>
 </body>
 </html>
