@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Estrattore Immagine IMDb</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 30px; }
+        input { width: 60%; padding: 10px; margin: 10px 0; }
+        button { padding: 10px 20px; font-size: 16px; }
+        img { margin-top: 20px; max-width: 90%; height: auto; }
+    </style>
+</head>
+<body>
+    <h1>Estrattore Immagine IMDb</h1>
+    <input type="text" id="urlInput" placeholder="Incolla qui il link IMDb Mediaviewer">
+    <br>
+    <button onclick="estraiImmagine()">Estrai Immagine</button>
+    <div id="output"></div>
+
+    <script>
+        async function estraiImmagine() {
+            const url = document.getElementById('urlInput').value;
+            if (!url.includes('imdb.com/mediaviewer')) {
+                document.getElementById('output').innerHTML = "<p>Inserisci un link IMDb valido.</p>";
+                return;
+            }
+
+            try {
+                const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
+                const response = await fetch(proxyUrl);
+                const text = await response.text();
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const img = doc.querySelector('img.ipc-media img, img');
+
+                if (img) {
+                    const imgSrc = img.src;
+                    document.getElementById('output').innerHTML = `<img src="${imgSrc}" alt="Immagine IMDb">`;
+                } else {
+                    document.getElementById('output').innerHTML = "<p>Immagine non trovata.</p>";
+                }
+            } catch (error) {
+                document.getElementById('output').innerHTML = "<p>Errore durante il download.</p>";
+            }
+        }
+    </script>
+</body>
+</html>
